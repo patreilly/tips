@@ -11,12 +11,12 @@ aws cloudformation get-template-summary --template-body file://cloudformation-te
 #### Get latest AMI in Region
 Windows:
 ```
-aws ec2 describe-images --owners amazon --filters "Name=platform,Values=windows" --query 'reverse(sort_by(Images, &CreationDate))[:1].ImageId' --output text --region us-east-1
+aws ssm get-parameters --names /aws/service/ami-windows-latest/Windows_Server-2016-English-Full-Base --region us-west-2 
 ```
 
 Linux:
 ```
-aws ec2 describe-images --owners amazon --filters 'Name=name,Values=amzn2-ami-hvm-2.0.????????.?-x86_64-gp2' --query 'reverse(sort_by(Images, &CreationDate))[:1].ImageId' --output text --region us-east-1
+aws ssm get-parameters --names /aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2 --region us-west-2 
 ```
 ### Productivity
 
