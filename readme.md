@@ -8,7 +8,16 @@ After spending hours on a cloudformation template, the last thing I want to do i
 ```
 aws cloudformation get-template-summary --template-body file://cloudformation-template.yml --profile pat | jq '[.Parameters | .[] | {"ParameterKey": .ParameterKey, "ParameterValue": .DefaultValue}]' > params.json
 ```
+#### Get latest AMI in Region
+Windows:
+```
+aws ec2 describe-images --owners amazon --filters "Name=platform,Values=windows" --query 'reverse(sort_by(Images, &CreationDate))[:1].ImageId' --output text --region us-east-1
+```
 
+Linux:
+```
+aws ec2 describe-images --owners amazon --filters 'Name=name,Values=amzn2-ami-hvm-2.0.????????.?-x86_64-gp2' --query 'reverse(sort_by(Images, &CreationDate))[:1].ImageId' --output text --region us-east-1
+```
 ### Productivity
 
 #### Push to multiple git repos
@@ -23,16 +32,6 @@ to push to both repos at the same time, I use:
 git push all
 ```
 
-#### Get latest AMI in Region
-Windows:
-```
-aws ec2 describe-images --owners amazon --filters "Name=platform,Values=windows" --query 'reverse(sort_by(Images, &CreationDate))[:1].ImageId' --output text --region us-east-1
-```
-
-Linux:
-```
-aws ec2 describe-images --owners amazon --filters 'Name=name,Values=amzn2-ami-hvm-2.0.????????.?-x86_64-gp2' --query 'reverse(sort_by(Images, &CreationDate))[:1].ImageId' --output text --region us-east-1
-```
 ### Data Engineering
 
 #### Spark Glue Job, First Run Problems
