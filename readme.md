@@ -69,19 +69,25 @@ else:
 #### Shut down dev endpoints
 shut down all dev endpoints in the account
 ```
-import json, boto3, logging, os
+import json
+import boto3
+import logging
+import os
+
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
-regionName = os.environ['REGION']
+region_name = os.environ['AWS_REGION']
+glue = boto3.client('glue',region_name=region_name)
 
 def lambda_handler(event, context):
-    glue = boto3.client('glue',region_name=regionName)
+    
     
     devEndpointsList = glue.get_dev_endpoints(MaxResults=100)
     devEndpointsList = devEndpointsList['DevEndpoints']
     
     if len(devEndpointsList) > 0:
+        endpointCount=0
         
         #loop through endpoints and shut them down
         for endpoint in devEndpointsList:
@@ -103,6 +109,7 @@ def lambda_handler(event, context):
             'statusCode': 200,
             'body': json.dumps("No Glue Dev Endpoints are open at this time")
         }
+
 ```
 
 #### Logging Boilerplate code
