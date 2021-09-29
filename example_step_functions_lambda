@@ -1,0 +1,62 @@
+import boto3
+import os
+import json
+import logging
+import time
+from datetime import timezone
+from botocore.exceptions import ClientError
+
+# set logging
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
+
+# boto3 resources
+glue_client = boto3.client('glue')
+stepfunctions_client = boto3.client('stepfunctions')
+
+def lambda_handler(event, context):
+    crawler_name = event['Input']['crawler_name']
+    task_token = event['TaskToken']
+    try:
+        glue_response = glue_client.start_crawler(
+            Name=crawler_name
+        )
+
+        logger.info(f'Starting {crawler_name} now: {glue_response}')
+
+        get_crawler_response = glue_client.get_crawler(
+            Name=crawler_name
+        )
+
+        while get_crawler_response['Crawler']['State'] == 'RUNNING':
+            logger.info(get_crawler_response)
+            wait_secs = 30
+            logger.info(f"{crawler_name} is still in {get_crawler_response['Crawler']['State']} state. Waiting another {str(wait_secs)} seconds...")
+            time.sleep(wait_secs)
+            get_crawler_response = glue_client.get_crawler(
+                Name=crawler_name
+            )
+            
+        stepfunctions_client.send_task_success(
+            taskToken=task_token,
+            output=json.dumps('{"CrawlerResult": "Succeeded"}')
+        )
+
+        return {
+            'statusCode': 200,
+            'body': json.dumps(f'Glue crawler {crawler_name} is now finishing: {get_crawler_response}')
+        }
+
+    except ClientError as e:
+        logger.exception(f'Error triggering step functions: {e}')
+
+        stepfunctions_client.send_task_failure(
+            taskToken=task_token,
+            output=json.dumps('{"CrawlerResult": "Failed"}')
+        )
+
+        return {
+            'statusCode': 400,
+            'body': json.dumps(e)
+        }
+        
